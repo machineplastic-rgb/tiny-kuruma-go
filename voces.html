@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Voces Tiny Kuruma</title>
+<link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@500..800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111;--paper:#fff6e5;--bg:#ffd23f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2a2410}}
+:root[data-theme="dark"]{--bg:#2a2410}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Shantell Sans',system-ui,sans-serif;font-weight:600;padding:16px;min-height:100vh}
+main{max-width:720px;margin:0 auto}
+h1{font-size:30px;line-height:1.05;background:var(--paper);border:3px solid var(--ink);border-radius:20px;padding:14px 18px}
+p.lead{background:var(--paper);border:3px solid var(--ink);border-radius:16px;padding:10px 14px;margin:12px 0}
+h2{margin:18px 0 8px;font-size:20px;color:var(--ink);background:var(--paper);display:inline-block;border:3px solid var(--ink);border-radius:999px;padding:4px 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+button{font:inherit;border:3px solid var(--ink);border-radius:16px;background:var(--paper);padding:12px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+button b{font-size:26px;line-height:1}
+button small{font-size:12px;opacity:.7}
+button.on{background:#3dd9c4}
+#st{margin-top:14px;font-size:14px}
+</style>
+</head>
+<body>
+<main>
+<h1>Voces de niños · TINY KURUMA GO!</h1>
+<p class="lead">Toca cada número para escucharlo y dime cuál es cuál: "¡MEC MEC!", "¡PIII!", "¡BROOOM!", "¡POF!", "¡YUJUU!", "¡GAOOO!" y "TINY KURUMA GO!". Por ejemplo: "A3 es mec mec, B7 es broom".</p>
+<div id="lists"></div>
+<p id="st">Cargando audio…</p>
+</main>
+<script>
+const FILES={A:'music/voces-a.m4a',B:'music/voces-b.m4a'};
+let ctx,src;
+async function analyse(name,url){
+  const buf=await ctx.decodeAudioData(await (await fetch(url)).arrayBuffer());
+  const d=buf.getChannelData(0),sr=buf.sampleRate,win=Math.round(sr*.02),env=[];
+  for(let i=0;i<d.length;i+=win){let s=0;for(let j=i;j<Math.min(d.length,i+win);j++)s+=d[j]*d[j];env.push(Math.sqrt(s/win))}
+  const mx=Math.max(...env),th=mx*.06,segs=[];let st=-1,quiet=0;
+  env.forEach((v,i)=>{if(v>th){if(st<0)st=i;quiet=0}else if(st>=0){quiet++;if(quiet>=15){segs.push([st*.02,(i-quiet+1)*.02]);st=-1;quiet=0}}});
+  if(st>=0)segs.push([st*.02,env.length*.02]);
+  return{buf,segs:segs.filter(([a,b])=>b-a>.12)};
+}
+function play(buf,a,b,btn){
+  if(src)try{src.stop()}catch(e){}
+  document.querySelectorAll('button.on').forEach(x=>x.classList.remove('on'));btn.classList.add('on');
+  src=ctx.createBufferSource();src.buffer=buf;src.connect(ctx.destination);src.start(0,Math.max(0,a-.05),b-a+.15);
+  src.onended=()=>btn.classList.remove('on');
+}
+document.body.addEventListener('click',async()=>{if(!ctx){ctx=new AudioContext();await init()}},{once:true});
+async function init(){
+  const box=document.getElementById('lists');
+  for(const[name,url]of Object.entries(FILES)){
+    const{buf,segs}=await analyse(name,url);
+    const h=document.createElement('h2');h.textContent='Toma '+name;box.appendChild(h);
+    const g=document.createElement('div');g.className='grid';box.appendChild(g);
+    segs.forEach(([a,b],i)=>{const bt=document.createElement('button');bt.innerHTML=`<b>${name}${i+1}</b><small>${a.toFixed(1)}–${b.toFixed(1)} s</small>`;bt.onclick=()=>play(buf,a,b,bt);g.appendChild(bt)});
+  }
+  document.getElementById('st').textContent='Listo. Toca un número para oírlo.';
+}
+document.getElementById('st').textContent='Toca cualquier sitio para cargar el audio.';
+</script>
+</body>
+</html>
