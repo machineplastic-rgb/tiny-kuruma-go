@@ -1,7 +1,7 @@
 // TINY KURUMA GO! — funciona sin internet una vez abierto.
 // La página siempre se pide primero a la red (para tener la última versión) y, si no hay conexión, se usa la guardada.
 // La música no pasa por aquí: el navegador la pide por trozos y en iPhone daría problemas.
-const CACHE = 'tkg-v23';
+const CACHE = 'tkg-v24';
 const CORE = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png', './icon-mask-512.png'];
 
 self.addEventListener('install', e => {
