@@ -292,8 +292,9 @@ const Z=[
   {id:'fuji',n:'12',name:'FUJI',jp:'富士山',c:'#6ec6ee',x:190,y:390,w:220,h:170,pin:[190,489],seed:23,
    tag:'La montaña más alta de Japón, nevada.',newT:'HIELO',newD:'Los coches resbalan por el hielo hasta chocar con algo.',snd:'Ventisca y pasos en la nieve',sub:'#f28c28',sndC:'#fbe9c9',play:'#e52521'},
 ];
+if(GAME)Z.forEach(z=>{if(!z.done){z.newT='5 NIVELES';z.newD='Coches nuevos de la zona y un rompecabezas distinto en cada nivel.'}});
 const ZM=Object.fromEntries(Z.map(z=>[z.id,z]));
-let OPEN=1,ALL=false,CUR=0,SEL='nikko',TRAV=false,CUM=[],TOT=0;
+let OPEN=GAME?9:1,ALL=false,CUR=0,SEL='nikko',TRAV=false,CUM=[],TOT=0;
 const isOpen=i=>ALL||i<=OPEN;
 const ACC='#f7cf3d';
 
@@ -418,7 +419,7 @@ function growFrom(el,z){const G=$('#grow'),r=el.getBoundingClientRect(),x=r.left
     let d=false;const end=()=>{if(d)return;d=true;G.classList.remove('on');a.cancel()};a.onfinish=end;setTimeout(end,460)};
 }
 function play(){const z=ZM[SEL],i=Z.indexOf(z);if(!isOpen(i)){SFX.nope();const b=$('#pPlay');b.classList.remove('nope');void b.offsetWidth;b.classList.add('nope');return}
-  SFX.click();travel(i,()=>setTimeout(()=>{if(GAME&&z.id==='tokyo'){parent.postMessage({tk:'back'},'*');return}if(GAME&&z.id==='nikko'){parent.postMessage({tk:'play',z:'nikko'},'*');return}if(z.id==='yokohama'&&!GAME)openNight($('#pPlay'));else growFrom($('#pPlay'),z)},250));
+  SFX.click();travel(i,()=>setTimeout(()=>{if(GAME&&z.id==='tokyo'){parent.postMessage({tk:'back'},'*');return}if(GAME){parent.postMessage({tk:'play',z:z.id},'*');return}if(z.id==='yokohama'&&!GAME)openNight($('#pPlay'));else growFrom($('#pPlay'),z)},250));
 }
 
 /* ---------- NOCHE: pantalla a oscuras con luces ---------- */
